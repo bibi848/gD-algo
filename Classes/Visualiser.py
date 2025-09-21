@@ -24,29 +24,54 @@ class Visualiser:
                 if col != 'Price':
                     self.df[i][col] = pd.to_numeric(self.df[i][col], errors='coerce')
     
+    def cropTimeData(self, time, data, startDate, endDate):
+        start = pd.to_datetime(startDate)
+        end = pd.to_datetime(endDate)
+
+        mask = (time >= start) & (time <= end)
+
+        new_time = time[mask].reset_index(drop=True)
+
+        new_data = []
+        for i in range(len(data)):
+            aligned = data[i].reindex(time.index)
+            new_data.append(aligned[mask].reset_index(drop=True))
+
+        return new_time, new_data
+
+    
     def calcPercentageChange(self, oldValue, newValue):
         return ((newValue-oldValue)/oldValue)*100
 
-    def percentData(self, data, priceType, tickr):
+    def percentData(self, data, tickr):
         firstValues = []
         for i in range(len(tickr)):
-                firstValues.append(data[i][priceType].iloc[0])
+                firstValues.append(data[i].iloc[0])
         
         perData = []
         for i in range(len(tickr)):
             grp = []
-            for j in range(len(data[i][priceType])):
-                grp.append(self.calcPercentageChange(firstValues[i], data[i][priceType].iloc[j]))
+            for j in range(len(data[i])):
+                grp.append(self.calcPercentageChange(firstValues[i], data[i].iloc[j]))
             perData.append(grp)
 
         return perData
     
-    def movingAverage(self, data, priceType, windows, tickr):
+    def rollingAverage(self, data, window):
+        result = []
+        for i in range(len(data)):
+            start = max(0, i - window + 1)   
+            window_slice = data[start:i+1]   
+            avg = sum(window_slice) / len(window_slice)
+            result.append(avg)
+        return result
+    
+    def movingAverage(self, data, windows, tickr):
         MAData = []
         for i in range(len(tickr)):
             grp = []
             for w in windows:
-                ma = data[i][priceType].rolling(window=w, min_periods=1).mean()
+                ma = self.rollingAverage(data[i], w)
                 grp.append(ma)
             MAData.append(grp)
         return MAData
@@ -61,21 +86,19 @@ class Visualiser:
             print('price type not available - yet!')
             return
 
-        data = self.df.copy()
-
-        time = []
+        dt = self.df.copy()
+        time = dt[0]['Price']
+        data = []
         for i in range(len(self.tickr)):
-            if startDate:
-                data[i] = data[i][data[i]['Price'] >= pd.to_datetime(startDate, dayfirst=True)]
-            if endDate:
-                data[i] = data[i][data[i]['Price'] <= pd.to_datetime(endDate, dayfirst=True)]
-            time.append(data[i]['Price'])
+            data.append(dt[i][priceType])
+
+        time, data = self.cropTimeData(time, data, startDate, endDate)
 
         if percentage:
-            data = self.percentData(data, priceType, self.tickr)
+            data = self.percentData(data, self.tickr)
         
         if MA:
-            MAData = self.movingAverage(data, priceType, MA, self.tickr)
+            MAData = self.movingAverage(data, MA, self.tickr)
         
         plt.figure(figsize=(10, 5))
         plt.xlabel("Date")
@@ -87,14 +110,11 @@ class Visualiser:
             plt.title(priceType)
 
         for i in range(len(self.tickr)):
-            if percentage:
-                plt.plot(time[i], data[i], label=self.tickr[i])
-            else:
-                plt.plot(time[i], data[i][priceType], label=self.tickr[i])
+            plt.plot(time, data[i], label=self.tickr[i])
             
             if MA:
                 for j in range(len(MA)):
-                    plt.plot(data[i]['Price'], MAData[i][j], label=f"{self.tickr[i]} MA{MA[j]}")
+                    plt.plot(time, MAData[i][j], label=f"{self.tickr[i]} MA{MA[j]}")
 
         plt.grid()
         plt.legend()
