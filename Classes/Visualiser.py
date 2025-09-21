@@ -23,16 +23,40 @@ class Visualiser:
             for col in self.df[i].columns:
                 if col != 'Price':
                     self.df[i][col] = pd.to_numeric(self.df[i][col], errors='coerce')
+    
+    def calcPercentageChange(self, oldValue, newValue):
+        return ((newValue-oldValue)/oldValue)*100
 
-    def plotPrice(self, priceType='Open', startDate=None, endDate=None):
+    def percentData(self, data, priceType, startDate, tickr):
+        firstValues = []
+        for i in range(len(tickr)):
+            df_filtered = data[i][priceType][data[i]['Price'] >= pd.to_datetime(startDate, dayfirst=True)]
+            if not df_filtered.empty:
+                FV = df_filtered.iloc[0]
+                firstValues.append(FV)
+        
+        perData = []
+        for i in range(len(tickr)):
+            dt = data[i][priceType]
+            grp = []
+            for j in range(len(dt)):
+                grp.append(self.calcPercentageChange(firstValues[i], dt.iloc[j]))
+            perData.append(grp)
+
+        return perData
+
+
+    def plotPrice(self, priceType='Open', 
+                        percentage=False,
+                        MA=False,
+                        startDate=None, 
+                        endDate=None):
 
         if priceType not in availableColumns:
             print('price type not available - yet!')
+            return
 
         data = self.df.copy()
-        plt.figure(figsize=(10, 5))
-        plt.xlabel("Date")
-        plt.ylabel(f"{priceType}")
 
         for i in range(len(self.tickr)):
             if startDate:
@@ -40,9 +64,24 @@ class Visualiser:
             if endDate:
                 data[i] = data[i][data[i]['Price'] <= pd.to_datetime(endDate, dayfirst=True)]
         
-            plt.plot(data[i]['Price'], data[i][priceType], label=self.tickr[i])
+        if percentage:
+            perData = self.percentData(data, priceType, startDate, self.tickr)
+        
+        plt.figure(figsize=(10, 5))
+        plt.xlabel("Date")
+        if percentage:
+            plt.ylabel("Percent Change")
+            plt.title("Percent Change")
+        else:
+            plt.ylabel(f"{priceType}")
+            plt.title(priceType)
 
-        plt.title(priceType)
+        for i in range(len(self.tickr)):
+            if percentage:
+                plt.plot(data[i]['Price'], perData[i], label=self.tickr[i])
+            else:
+                plt.plot(data[i]['Price'], data[i][priceType], label=self.tickr[i])
+
         plt.grid()
         plt.legend()
         plt.show()
