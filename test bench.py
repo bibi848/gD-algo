@@ -1,10 +1,10 @@
 #%%
 from Classes.Visualiser import Visualiser
 
-tickrs = ['TSLA', 'META']
+tickrs = ['TSLA']
 stock = Visualiser('Stocks', tickrs, '1d')
-stock.plotPrice(priceType='Open',
+stock.plotPrice(priceType='Close',
                 percentage=True,
-                MA=False,
+                MA=[200],
                 startDate="01/01/2020",
-                endDate="01/01/2024")
+                endDate="01/01/2021")

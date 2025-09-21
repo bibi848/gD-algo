@@ -27,24 +27,29 @@ class Visualiser:
     def calcPercentageChange(self, oldValue, newValue):
         return ((newValue-oldValue)/oldValue)*100
 
-    def percentData(self, data, priceType, startDate, tickr):
+    def percentData(self, data, priceType, tickr):
         firstValues = []
         for i in range(len(tickr)):
-            df_filtered = data[i][priceType][data[i]['Price'] >= pd.to_datetime(startDate, dayfirst=True)]
-            if not df_filtered.empty:
-                FV = df_filtered.iloc[0]
-                firstValues.append(FV)
+                firstValues.append(data[i][priceType].iloc[0])
         
         perData = []
         for i in range(len(tickr)):
-            dt = data[i][priceType]
             grp = []
-            for j in range(len(dt)):
-                grp.append(self.calcPercentageChange(firstValues[i], dt.iloc[j]))
+            for j in range(len(data[i][priceType])):
+                grp.append(self.calcPercentageChange(firstValues[i], data[i][priceType].iloc[j]))
             perData.append(grp)
 
         return perData
-
+    
+    def movingAverage(self, data, priceType, windows, tickr):
+        MAData = []
+        for i in range(len(tickr)):
+            grp = []
+            for w in windows:
+                ma = data[i][priceType].rolling(window=w, min_periods=1).mean()
+                grp.append(ma)
+            MAData.append(grp)
+        return MAData
 
     def plotPrice(self, priceType='Open', 
                         percentage=False,
@@ -58,14 +63,19 @@ class Visualiser:
 
         data = self.df.copy()
 
+        time = []
         for i in range(len(self.tickr)):
             if startDate:
                 data[i] = data[i][data[i]['Price'] >= pd.to_datetime(startDate, dayfirst=True)]
             if endDate:
                 data[i] = data[i][data[i]['Price'] <= pd.to_datetime(endDate, dayfirst=True)]
-        
+            time.append(data[i]['Price'])
+
         if percentage:
-            perData = self.percentData(data, priceType, startDate, self.tickr)
+            data = self.percentData(data, priceType, self.tickr)
+        
+        if MA:
+            MAData = self.movingAverage(data, priceType, MA, self.tickr)
         
         plt.figure(figsize=(10, 5))
         plt.xlabel("Date")
@@ -78,9 +88,13 @@ class Visualiser:
 
         for i in range(len(self.tickr)):
             if percentage:
-                plt.plot(data[i]['Price'], perData[i], label=self.tickr[i])
+                plt.plot(time[i], data[i], label=self.tickr[i])
             else:
-                plt.plot(data[i]['Price'], data[i][priceType], label=self.tickr[i])
+                plt.plot(time[i], data[i][priceType], label=self.tickr[i])
+            
+            if MA:
+                for j in range(len(MA)):
+                    plt.plot(data[i]['Price'], MAData[i][j], label=f"{self.tickr[i]} MA{MA[j]}")
 
         plt.grid()
         plt.legend()
