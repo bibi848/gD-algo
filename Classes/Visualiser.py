@@ -6,7 +6,7 @@ availableColumns = ['Close', 'High', 'Low', 'Open', 'Volume']
 
 class Visualiser:
     
-    def __init__(self, assetType='Stocks', tickr=['AMD'], timeRes='1d'):
+    def __init__(self, assetType='Stocks', tickr=['AMD'], timeRes='1d', startDate = '01012010', endDate = '01012025'):
 
         self.assetType = assetType
         self.tickr = tickr
@@ -16,7 +16,7 @@ class Visualiser:
 
         self.df = []
         for i in range(len(tickr)):
-            filePath = currentDirectory + '//Historical Data//' + assetType + '//' + tickr[i] + '_' + timeRes + '_01012010_01012025.csv'
+            filePath = currentDirectory + '//Historical Data//' + assetType + '//' + tickr[i] + '_' + timeRes + '_' + startDate + '_' + endDate + '.csv'
             self.df.append(pd.read_csv(filePath, header=0).iloc[2:])
             self.df[i]['Price'] = pd.to_datetime(self.df[i]['Price'], format="%Y-%m-%d")
         
