@@ -8,12 +8,13 @@ Folders:
 * Historical Data: Contains Stock and Crypto historical data. More information can be found in the folder.
 * Option Tests: Scripts looking at option pricing.
 * PM: Scripts looking at using Polymarket via its API.
-<br>
+
+<br><br>
 Files:
-* `.gitignore`
-* README.md
-* requirements.txt
-* test bench.py
+* `.gitignore`.
+* `README.md`.
+* `requirements.txt`.
+* `test bench.py`.
 
 <br><br>
 ## Citation & Contact
