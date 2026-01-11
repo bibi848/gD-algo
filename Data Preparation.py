@@ -12,7 +12,7 @@ import os
 USD_pairs = ['ETHUSD', 'XRPUSD', 'XBTUSD']
 
 INPUT_DIR  = os.path.join("Historical Data", "Kraken_Data_Refactored")
-OUTPUT_DIR = "Training Data"
+OUTPUT_DIR = os.path.join("Training Data", "Aligned Data")
 START_DATE = pd.Timestamp("2018-01-01", tz="UTC")
 
 #%%
@@ -37,7 +37,6 @@ full_index = pd.date_range(
 
 #%%
 # Reindexing and cropping 
-
 for pair in USD_pairs:
     print("Processing:", pair)
 
@@ -74,6 +73,11 @@ for pair in USD_pairs:
     print()
 
     out_path = os.path.join(OUTPUT_DIR, f"{pair}_1m_2018_aligned.csv")
+    df.index.name = "timestamp"
     df.to_csv(out_path)
 
 #%%
+# Splitting data into batches. 
+
+INPUT_DIR  = os.path.join("Training Data", "Aligned Data")
+OUTPUT_DIR = os.path.join("Training Data", "Batched Data")
