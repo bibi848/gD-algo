@@ -44,3 +44,17 @@ for pair in coinPairs:
     ohlcv = load_and_resample(pair)
     out_path = os.path.join(OUTPUT_DIR, f"{pair}_1m.csv")
     ohlcv.to_csv(out_path)
+
+#%%
+import pandas as pd
+OUTPUT_DIR = "Kraken_Data_Refactored"
+coinPairs = ['ETHEUR', 'ETHGBP', 'ETHUSD',
+             'SOLEUR', 'SOLGBP', 'SOLUSD',
+             'XBTEUR', 'XBTGBP', 'XBTUSD',
+             'XRPEUR', 'XRPGBP', 'XRPUSD']
+
+for pair in coinPairs:
+    df = pd.read_csv(os.path.join(OUTPUT_DIR, f"{pair}_1m.csv"))
+
+    print(pair)
+    print('First Date:', df['timestamp'][0])
