@@ -1,3 +1,9 @@
+'''
+This class allows the user to visualise financial data extracted by yfinance. Its use
+is shown in Visualise YFinance Data.py. You can compare multiple stocks, their percentage
+changes as well as their moving averages. 
+'''
+
 import pandas as pd
 import matplotlib.pyplot as plt
 import os

@@ -1,3 +1,7 @@
+'''
+Defines a sliding-window dataset for supervised learning. 
+'''
+
 from torch.utils.data import Dataset
 import numpy as np
 import torch

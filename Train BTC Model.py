@@ -4,12 +4,15 @@ import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader
+
+from Classes.CryptoWindowDataset import CryptoWindowDataset
+from Classes.CNN_Model import CNN1D
 
 # Config
 SAVE_DIR  = os.path.join("Training Data", "Models")
-WINDOW = 150          # past minutes
-HORIZON = 1           # h = 1 minute
+WINDOW = 150    # past minutes
+HORIZON = 1     # h = 1 minute
 BATCH_SIZE = 64
 EPOCHS = 4
 LR = 1e-3
@@ -41,7 +44,7 @@ print("Aligned rows:", len(df))
 print("Start:", df.index[0])
 print("End:", df.index[-1])
 
-# Keep only numeric features
+# Numeric features
 features = [
     "BTC_close", "BTC_volume",
     "ETH_close", "ETH_volume",
@@ -54,27 +57,7 @@ df["BTC_close"] = np.log(df["BTC_close"])
 df["ETH_close"] = np.log(df["ETH_close"])
 
 #%%
-# Dataset
-class CryptoWindowDataset(Dataset):
-    def __init__(self, data, window, horizon):
-        self.data = data.values.astype(np.float32)
-        self.window = window
-        self.horizon = horizon
-
-    def __len__(self):
-        return len(self.data) - self.window - self.horizon
-
-    def __getitem__(self, idx):
-        x = self.data[idx : idx + self.window]
-
-        p_t  = self.data[idx + self.window - 1, 0]  # BTC log price
-        p_th = self.data[idx + self.window - 1 + self.horizon, 0]
-
-        y = p_th - p_t
-
-        return torch.tensor(x), torch.tensor(y)
-
-# Train / Val split (time-based)
+# Train / Val split
 split_idx = int(len(df) * TRAIN_SPLIT)
 
 train_df = df.iloc[:split_idx]
@@ -87,33 +70,19 @@ train_loader = DataLoader(train_ds, batch_size=BATCH_SIZE, shuffle=True)
 val_loader   = DataLoader(val_ds, batch_size=BATCH_SIZE, shuffle=False)
 
 # CNN model
-class CNN1D(nn.Module):
-    def __init__(self, n_features):
-        super().__init__()
+model = CNN1D(
+    channels    = [4,16],
+    kernels     = [7]
+).to(DEVICE)
 
-        self.net = nn.Sequential(
-            nn.Conv1d(n_features, 32, kernel_size=5, padding=2),
-            nn.ReLU(),
-            nn.Conv1d(32, 64, kernel_size=5, padding=2),
-            nn.ReLU(),
-            nn.AdaptiveAvgPool1d(1),
-        )
-
-        self.fc = nn.Linear(64, 1)
-
-    def forward(self, x):
-        # x: (batch, time, features)
-        x = x.transpose(1, 2)
-        x = self.net(x)
-        x = x.squeeze(-1)
-        return self.fc(x).squeeze(-1)
-
-model = CNN1D(n_features=len(features)).to(DEVICE)
 optimizer = torch.optim.Adam(model.parameters(), lr=LR)
 criterion = nn.MSELoss()
 
 #%%
 # Training loop
+print()
+print('Training Starting')
+print()
 for epoch in range(EPOCHS):
     model.train()
     train_loss = 0.0
@@ -159,5 +128,5 @@ checkpoint = {
 
 torch.save(
     checkpoint,
-    os.path.join(SAVE_DIR, "CNN_BTCUSD_1.pt")
+    os.path.join(SAVE_DIR, "CNN_BTCUSD_2.pt")
 )

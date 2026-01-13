@@ -1,4 +1,9 @@
+'''
+Uses the Visualiser class to visualise financial data from yfinance. 
+'''
 #%%
+# Visualise Data
+
 from Classes.Visualiser import Visualiser
 
 tickrs = ['BTC-USD']

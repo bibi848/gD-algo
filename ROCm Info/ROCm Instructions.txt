@@ -40,6 +40,7 @@ docker run -it \
   bash
 
 docker start -ai rocm-dev
+docker start -ai rocmgdalgo-dev
 
 For example:
 
