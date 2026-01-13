@@ -1,0 +1,51 @@
+This .txt file contains my personal notes for setting up my ROCm
+environment so that I can use my AMD GPU to train models. 
+
+docker pull rocm/pytorch:latest
+
+docker run -it --rm \
+  --device=/dev/kfd \
+  --device=/dev/dri \
+  --group-add video \
+  --security-opt seccomp=unconfined \
+  -v ~/Documents/Python/ROCm\ Tests:/workspace \
+  --ipc=host \
+  rocm/pytorch:latest \
+  bash
+
+python3 - << 'EOF'
+import torch
+print("PyTorch version:", torch.__version__)
+print("ROCm available:", torch.version.hip)
+print("GPU detected:", torch.cuda.is_available())
+if torch.cuda.is_available():
+    print("Device:", torch.cuda.get_device_name(0))
+EOF
+
+ls /dev/kfd
+ls /dev/dri
+groups
+rocminfo | grep -i gfx
+
+# Persistent Container
+docker run -it \
+  --name rocm-dev \
+  --device=/dev/kfd \
+  --device=/dev/dri \
+  --group-add video \
+  --security-opt seccomp=unconfined \
+  -v ~/Documents/Python/ROCm\ Tests:/workspace \
+  --ipc=host \
+  rocm/pytorch:latest \
+  bash
+
+docker start -ai rocm-dev
+
+For example:
+
+(.venv) bibi@bibi-ordi-ubuntu:~/Documents/Python/gD-algo$ docker start -ai rocm-dev
+
+root@dc594fd6100c:/# cd /workspace
+root@dc594fd6100c:/workspace# python3 ROCm Example.py
+
+and the script should run. 
