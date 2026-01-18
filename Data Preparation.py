@@ -77,7 +77,32 @@ for pair in USD_pairs:
     df.to_csv(out_path)
 
 #%%
-# Splitting data into batches. 
+# Creating mini sets for smaller model training and testing. 
 
 INPUT_DIR  = os.path.join("Training Data", "Aligned Data")
-OUTPUT_DIR = os.path.join("Training Data", "Batched Data")
+OUTPUT_DIR = os.path.join("Training Data", "Mini Data")
+data_size = 600_000
+
+path = os.path.join(INPUT_DIR, f"XBTUSD_1m_2018_aligned.csv")
+df_BTC = pd.read_csv(path)
+path = os.path.join(INPUT_DIR, f"ETHUSD_1m_2018_aligned.csv")
+df_ETH = pd.read_csv(path)
+path = os.path.join(INPUT_DIR, f"XRPUSD_1m_2018_aligned.csv")
+df_XRP = pd.read_csv(path)
+
+subset_df_BTC = df_BTC[df_BTC["timestamp"] >= "2022-01-01"]
+subset_df_BTC = subset_df_BTC.iloc[:data_size]
+subset_df_ETH = df_ETH[df_ETH["timestamp"] >= "2022-01-01"]
+subset_df_ETH = subset_df_ETH.iloc[:data_size]
+subset_df_XRP = df_XRP[df_XRP["timestamp"] >= "2022-01-01"]
+subset_df_XRP = subset_df_XRP.iloc[:data_size]
+
+out_path = os.path.join(OUTPUT_DIR, f"XBTUSD_1m_2022_mini.csv")
+subset_df_BTC.index.name = "timestamp"
+subset_df_BTC.to_csv(out_path)
+out_path = os.path.join(OUTPUT_DIR, f"ETHUSD_1m_2022_mini.csv")
+subset_df_ETH.index.name = "timestamp"
+subset_df_ETH.to_csv(out_path)
+out_path = os.path.join(OUTPUT_DIR, f"XRPUSD_1m_2022_mini.csv")
+subset_df_XRP.index.name = "timestamp"
+subset_df_XRP.to_csv(out_path)
